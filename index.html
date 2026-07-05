@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>후쿠오카 목장 일본 방문 도우미</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans KR",Arial,sans-serif;
+  background:#f3f7fb;
+  color:#111827;
+}
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:linear-gradient(135deg,#1d4ed8,#38bdf8);
+  color:white;
+  padding:15px;
+  text-align:center;
+  box-shadow:0 2px 10px #0003;
+}
+header h1{margin:0;font-size:21px}
+header p{margin:5px 0 0;font-size:13px}
+main{max-width:900px;margin:auto;padding:12px}
+.card{
+  background:white;
+  border-radius:18px;
+  padding:14px;
+  margin-bottom:12px;
+  box-shadow:0 3px 12px #0001;
+}
+h2{font-size:19px;margin:4px 0 12px}
+.dayTabs{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:7px;
+}
+.dayTabs button{
+  border:0;
+  border-radius:13px;
+  padding:12px 6px;
+  font-size:14px;
+  font-weight:800;
+  background:#dbeafe;
+  color:#1e3a8a;
+}
+.dayTabs button.active{
+  background:#2563eb;
+  color:white;
+}
+.scheduleBtn{
+  width:100%;
+  text-align:left;
+  border:1px solid #dbeafe;
+  background:#fff;
+  border-radius:14px;
+  padding:12px;
+  margin:6px 0;
+  font-size:16px;
+  font-weight:800;
+}
+.scheduleBtn small{
+  display:block;
+  color:#64748b;
+  margin-top:4px;
+  font-size:13px;
+  font-weight:500;
+}
+.result{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:10px;
+  margin:7px 0;
+}
+.label{font-size:12px;color:#64748b}
+.ko{font-size:20px;font-weight:900;line-height:1.45}
+.jp{font-size:21px;font-weight:900;line-height:1.45}
+.pron{font-size:16px;color:#475569;line-height:1.45}
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+button{
+  cursor:pointer;
+}
+.speak,.clear{
+  border:0;
+  border-radius:13px;
+  padding:13px;
+  font-size:16px;
+  font-weight:900;
+  color:white;
+}
+.speak{background:#16a34a}
+.clear{background:#dc2626}
+.phraseBtn{
+  width:100%;
+  text-align:left;
+  background:white;
+  border:1px solid #dbeafe;
+  border-radius:14px;
+  padding:12px;
+  margin:6px 0;
+  font-size:16px;
+  font-weight:800;
+}
+.phraseBtn small{
+  display:block;
+  margin-top:4px;
+  color:#64748b;
+  font-weight:500;
+  line-height:1.4;
+}
+.category{
+  font-size:15px;
+  font-weight:900;
+  color:#334155;
+  margin:14px 0 6px;
+}
+.builderGrid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.word{
+  border:1px solid #cbd5e1;
+  background:#fff;
+  border-radius:12px;
+  padding:11px 13px;
+  font-size:15px;
+  font-weight:800;
+}
+.menu{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+}
+.menu button{
+  border:0;
+  border-radius:13px;
+  padding:11px 5px;
+  font-size:14px;
+  font-weight:900;
+  background:#e0e7ff;
+  color:#1e3a8a;
+}
+.menu button.active{
+  background:#2563eb;
+  color:white;
+}
+.tip{
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  color:#7c2d12;
+  border-radius:15px;
+  padding:12px;
+  font-size:14px;
+  line-height:1.6;
+}
+@media(max-width:560px){
+  .dayTabs{grid-template-columns:repeat(2,1fr)}
+  .menu{grid-template-columns:repeat(2,1fr)}
+  .controls{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>후쿠오카 목장 일본 방문 도우미</h1>
+  <p>일정별 일본어 · 교회 회화 · 식사 · 관광 · 긴급상황</p>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>오늘/일정 선택</h2>
+  <div class="dayTabs" id="dayTabs"></div>
+</section>
+
+<section class="card">
+  <h2 id="scheduleTitle">일정</h2>
+  <div id="scheduleList"></div>
+</section>
+
+<section class="card">
+  <div class="result">
+    <div class="label">한국어</div>
+    <div id="koResult" class="ko">문장을 선택하세요</div>
+  </div>
+  <div class="result">
+    <div class="label">일본어</div>
+    <div id="jpResult" class="jp">日本語がここに出ます</div>
+  </div>
+  <div class="result">
+    <div class="label">한글 발음</div>
+    <div id="pronResult" class="pron">발음이 여기에 나옵니다</div>
+  </div>
+  <div class="controls">
+    <button class="speak" onclick="speakCurrent()">🔊 일본어 듣기</button>
+    <button class="clear" onclick="clearAll()">🗑 지우기</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2 id="phraseTitle">상황별 일본어</h2>
+  <div class="menu" id="menu"></div>
+  <div id="phraseList"></div>
+</section>
+
+<section class="tip">
+  <b>사용법</b><br>
+  1. 날짜를 누르면 그날 일정이 나옵니다.<br>
+  2. 일정을 누르면 그 상황에 필요한 일본어만 자동으로 표시됩니다.<br>
+  3. 문장을 누르면 일본어가 보이고 바로 음성으로 들립니다.<br>
+  4. 카톡 안보다 크롬에서 열면 음성이 더 잘 나옵니다.
+</section>
+
+</main>
+
+<script>
+let currentDay = "0806";
+let currentCategory = "airport";
+let selected = null;
+
+const days = {
+  "0806": "8/6 목",
+  "0807": "8/7 금",
+  "0808": "8/8 토",
+  "0809": "8/9 일"
+};
+
+const schedule = {
+  "0806": [
+    ["07:30~08:30", "후쿠오카로 비행", "airport"],
+    ["08:30~12:00", "유후인으로 이동", "transport"],
+    ["12:00~13:30", "점심 식사", "meal"],
+    ["14:00~17:00", "유후인 관광", "yufuin"],
+    ["18:00", "저녁 식사", "meal"],
+    ["19:00~21:00", "히스이노야도 여명 체크인, 휴식", "hotel"],
+    ["23:00", "잠자리", "hotel"]
+  ],
+  "0807": [
+    ["06:00", "기상", "daily"],
+    ["07:00", "아침 식사", "meal"],
+    ["08:00~12:00", "유후인 관광", "yufuin"],
+    ["12:00~13:30", "점심 식사", "meal"],
+    ["14:00~17:00", "유후인 관광", "yufuin"],
+    ["18:00", "저녁 식사", "meal"],
+    ["23:00", "잠자리", "hotel"]
+  ],
+  "0808": [
+    ["06:00", "기상", "daily"],
+    ["07:00", "아침 식사", "meal"],
+    ["12:00~13:30", "점심 식사", "meal"],
+    ["14:00~17:00", "식사 준비", "meal"],
+    ["18:00", "저녁 식사", "meal"],
+    ["19:00~21:00", "한국 전통게임", "game"],
+    ["23:00", "잠자리", "hotel"]
+  ],
+  "0809": [
+    ["06:00", "기상", "daily"],
+    ["07:00", "아침 식사", "meal"],
+    ["10:00~12:00", "주일예배, 찬양 및 간증", "church"],
+    ["12:00", "점심 식사", "meal"],
+    ["17:00~18:00", "공항으로 이동", "transport"],
+    ["19:55~21:00", "부산으로 비행", "airport"]
+  ]
+};
+
+const categories = {
+  airport: "✈️ 공항/비행기",
+  transport: "🚌 이동",
+  hotel: "🏨 숙소",
+  yufuin: "🌿 유후인",
+  meal: "🍱 식사",
+  church: "⛪ 교회",
+  game: "🎲 전통놀이",
+  daily: "☀️ 기본",
+  emergency: "🚨 긴급",
+  builder: "🧩 문장 조립"
+};
+
+const phrases = {
+airport:[
+ ["여권입니다","パスポートです","파스포오토데스"],
+ ["몇 번 게이트입니까?","何番ゲートですか","난반 게에토데스카"],
+ ["이쪽이 맞습니까?","こちらで合っていますか","코치라데 앗테이마스카"],
+ ["화장실은 어디입니까?","トイレはどこですか","토이레와 도코데스카"],
+ ["물 좀 주시겠습니까?","水をいただけますか","미즈오 이타다케마스카"],
+ ["부산으로 가는 비행기입니다","釜山行きの飛行機です","푸산이키노 히코오키데스"],
+ ["감사합니다","ありがとうございます","아리가토 고자이마스"]
+],
+transport:[
+ ["유후인으로 가고 싶습니다","湯布院に行きたいです","유후인니 이키타이데스"],
+ ["공항으로 가고 싶습니다","空港に行きたいです","쿠우코오니 이키타이데스"],
+ ["여기에서 내려도 됩니까?","ここで降りてもいいですか","코코데 오리테모 이이데스카"],
+ ["얼마나 걸립니까?","どのくらいかかりますか","도노쿠라이 카카리마스카"],
+ ["이쪽이 맞습니까?","こちらで合っていますか","코치라데 앗테이마스카"],
+ ["감사합니다","ありがとうございます","아리가토 고자이마스"]
+],
+hotel:[
+ ["예약했습니다","予約しています","요야쿠시테이마스"],
+ ["체크인 부탁드립니다","チェックインをお願いします","쳇쿠인오 오네가이시마스"],
+ ["와이파이 비밀번호가 무엇입니까?","Wi-Fiのパスワードは何ですか","와이파이노 파스와아도와 난데스카"],
+ ["저녁 식사는 몇 시입니까?","夕食は何時ですか","유우쇼쿠와 난지데스카"],
+ ["아침 식사는 몇 시입니까?","朝食は何時ですか","초오쇼쿠와 난지데스카"],
+ ["수건 하나 더 부탁드립니다","タオルをもう一枚お願いします","타오루오 모오 이치마이 오네가이시마스"],
+ ["체크아웃은 몇 시입니까?","チェックアウトは何時ですか","쳇쿠아우토와 난지데스카"]
+],
+yufuin:[
+ ["이것은 얼마입니까?","これはいくらですか","코레와 이쿠라데스카"],
+ ["하나 주세요","一つください","히토츠 쿠다사이"],
+ ["두 개 주세요","二つください","후타츠 쿠다사이"],
+ ["추천해 주세요","おすすめを教えてください","오스스메오 오시에테 쿠다사이"],
+ ["카드 됩니까?","カードは使えますか","카아도와 츠카에마스카"],
+ ["현금만 됩니까?","現金だけですか","겐킨다케데스카"],
+ ["사진 찍어도 될까요?","写真を撮ってもいいですか","샤신오 톳테모 이이데스카"],
+ ["정말 아름답습니다","本当にきれいです","혼토니 키레이데스"]
+],
+meal:[
+ ["잘 먹겠습니다","いただきます","이타다키마스"],
+ ["정말 맛있습니다","本当においしいです","혼토니 오이시이데스"],
+ ["이 음식은 무엇입니까?","これは何ですか","코레와 난데스카"],
+ ["물 좀 부탁드립니다","水をお願いします","미즈오 오네가이시마스"],
+ ["잘 먹었습니다","ごちそうさまでした","고치소오사마데시타"],
+ ["함께 식사해서 기쁩니다","一緒に食事できてうれしいです","잇쇼니 쇼쿠지데키테 우레시이데스"],
+ ["감사합니다","ありがとうございます","아리가토 고자이마스"]
+],
+church:[
+ ["안녕하세요","こんにちは","곤니치와"],
+ ["처음 뵙겠습니다","はじめまして","하지메마시테"],
+ ["한국에서 왔습니다","韓国から来ました","칸코쿠카라 키마시타"],
+ ["함께 예배드릴 수 있어서 감사합니다","一緒に礼拝できて感謝します","잇쇼니 레이하이데키테 칸샤시마스"],
+ ["오늘 예배가 은혜로웠습니다","今日の礼拝は恵まれました","쿄오노 레이하이와 메구마레마시타"],
+ ["찬양이 참 좋았습니다","賛美がとても良かったです","산비가 토테모 요캇타데스"],
+ ["함께 찬양해서 기쁩니다","一緒に賛美できてうれしいです","잇쇼니 산비데키테 우레시이데스"],
+ ["간증 감사합니다","証しをありがとうございます","아카시오 아리가토 고자이마스"],
+ ["하나님께 영광을 돌립니다","神様に栄光をお返しします","카미사마니 에이코오 오오카에시시마스"],
+ ["아멘","アーメン","아멘"]
+],
+game:[
+ ["함께 하시겠습니까?","一緒にやりませんか","잇쇼니 야리마센카"],
+ ["한국 전통놀이입니다","韓国の伝統遊びです","칸코쿠노 덴토오 아소비데스"],
+ ["재미있습니다","楽しいです","타노시이데스"],
+ ["아주 잘하십니다","とても上手です","토테모 조오즈데스"],
+ ["다시 한 번 하겠습니다","もう一度やります","모오 이치도 야리마스"],
+ ["이기셨습니다","勝ちました","카치마시타"],
+ ["축하합니다","おめでとうございます","오메데토 고자이마스"]
+],
+daily:[
+ ["좋은 아침입니다","おはようございます","오하요오 고자이마스"],
+ ["안녕하세요","こんにちは","곤니치와"],
+ ["감사합니다","ありがとうございます","아리가토 고자이마스"],
+ ["죄송합니다","すみません","스미마센"],
+ ["괜찮습니다","大丈夫です","다이조오부데스"],
+ ["잠시만 기다려 주세요","少し待ってください","스코시 맛테 쿠다사이"]
+],
+emergency:[
+ ["일본어를 잘 못합니다","日本語がよくできません","니혼고가 요쿠 데키마센"],
+ ["천천히 말씀해 주세요","ゆっくり話してください","윳쿠리 하나시테 쿠다사이"],
+ ["다시 한 번 말씀해 주세요","もう一度言ってください","모오 이치도 잇테 쿠다사이"],
+ ["잘 모르겠습니다","よく分かりません","요쿠 와카리마센"],
+ ["도와주세요","助けてください","타스케테 쿠다사이"],
+ ["한국어를 할 수 있는 분이 있습니까?","韓国語ができる方はいますか","칸코쿠고가 데키루 카타와 이마스카"],
+ ["몸이 좋지 않습니다","体の調子が悪いです","카라다노 초오시가 와루이데스"]
+]
+};
+
+const builder = [
+ {title:"사람", words:[
+  ["저는","私は","와타시와"],
+  ["우리는","私たちは","와타시타치와"],
+  ["강 형제입니다","カン兄弟です","칸 쿄오다이데스"],
+  ["허 형제입니다","ホ兄弟です","호 쿄오다이데스"],
+  ["정 형제입니다","チョン兄弟です","촌 쿄오다이데스"],
+  ["한국에서 왔습니다","韓国から来ました","칸코쿠카라 키마시타"]
+ ]},
+ {title:"만남", words:[
+  ["처음 뵙겠습니다","はじめまして","하지메마시테"],
+  ["만나서","お会いできて","오아이데키테"],
+  ["정말","本当に","혼토니"],
+  ["반갑습니다","うれしいです","우레시이데스"],
+  ["감사합니다","ありがとうございます","아리가토 고자이마스"]
+ ]},
+ {title:"교회", words:[
+  ["함께","一緒に","잇쇼니"],
+  ["예배드릴 수 있어서","礼拝できて","레이하이데키테"],
+  ["찬양할 수 있어서","賛美できて","산비데키테"],
+  ["기쁩니다","うれしいです","우레시이데스"],
+  ["감사합니다","感謝します","칸샤시마스"]
+ ]},
+ {title:"기도", words:[
+  ["하나님께서","神様が","카미사마가"],
+  ["이 교회를","この教会を","코노 쿄오카이오"],
+  ["여러분을","皆さんを","미나상오"],
+  ["축복하시길 바랍니다","祝福してくださいますように","슈쿠후쿠시테 쿠다사이마스요오니"],
+  ["저도 기도하겠습니다","私もお祈りします","와타시모 오이노리시마스"]
+ ]}
+];
+
+function autoSelectDay(){
+  const now = new Date();
+  const m = now.getMonth()+1;
+  const d = now.getDate();
+  if(m===8 && d===6) currentDay="0806";
+  else if(m===8 && d===7) currentDay="0807";
+  else if(m===8 && d===8) currentDay="0808";
+  else if(m===8 && d===9) currentDay="0809";
+}
+autoSelectDay();
+
+function renderDays(){
+  const box=document.getElementById("dayTabs");
+  box.innerHTML="";
+  Object.keys(days).forEach(id=>{
+    const b=document.createElement("button");
+    b.textContent=days[id];
+    b.className=id===currentDay?"active":"";
+    b.onclick=()=>{
+      currentDay=id;
+      renderDays();
+      renderSchedule();
+    };
+    box.appendChild(b);
+  });
+}
+
+function renderSchedule(){
+  document.getElementById("scheduleTitle").textContent = days[currentDay] + " 일정";
+  const list=document.getElementById("scheduleList");
+  list.innerHTML="";
+  schedule[currentDay].forEach(item=>{
+    const b=document.createElement("button");
+    b.className="scheduleBtn";
+    b.innerHTML=item[1] + "<small>" + item[0] + " · 누르면 관련 일본어 표시</small>";
+    b.onclick=()=>{
+      currentCategory=item[2];
+      renderMenu();
+      renderPhrases();
+      window.scrollTo({top:document.getElementById("phraseTitle").offsetTop-80,behavior:"smooth"});
+    };
+    list.appendChild(b);
+  });
+}
+
+function renderMenu(){
+  const box=document.getElementById("menu");
+  box.innerHTML="";
+  Object.keys(categories).forEach(id=>{
+    const b=document.createElement("button");
+    b.textContent=categories[id];
+    b.className=id===currentCategory?"active":"";
+    b.onclick=()=>{
+      currentCategory=id;
+      renderMenu();
+      renderPhrases();
+    };
+    box.appendChild(b);
+  });
+}
+
+function renderPhrases(){
+  const list=document.getElementById("phraseList");
+  const title=document.getElementById("phraseTitle");
+  list.innerHTML="";
+  title.textContent = categories[currentCategory] + " 일본어";
+
+  if(currentCategory==="builder"){
+    builder.forEach(group=>{
+      const t=document.createElement("div");
+      t.className="category";
+      t.textContent=group.title;
+      list.appendChild(t);
+
+      const grid=document.createElement("div");
+      grid.className="builderGrid";
+      group.words.forEach(w=>{
+        const b=document.createElement("button");
+        b.className="word";
+        b.textContent=w[0];
+        b.onclick=()=>addPart(w);
+        grid.appendChild(b);
+      });
+      list.appendChild(grid);
+    });
+    return;
+  }
+
+  phrases[currentCategory].forEach(w=>{
+    const b=document.createElement("button");
+    b.className="phraseBtn";
+    b.innerHTML=w[0]+"<small>"+w[1]+"<br>"+w[2]+"</small>";
+    b.onclick=()=>{
+      selected=w;
+      show(w);
+      speakText(w[1]);
+    };
+    list.appendChild(b);
+  });
+}
+
+function show(w){
+  document.getElementById("koResult").textContent=w[0];
+  document.getElementById("jpResult").textContent=w[1];
+  document.getElementById("pronResult").textContent=w[2];
+}
+
+function addPart(w){
+  if(!selected) selected=["","",""];
+  selected=[
+    selected[0] ? selected[0]+" "+w[0] : w[0],
+    selected[1] ? selected[1]+" "+w[1] : w[1],
+    selected[2] ? selected[2]+" "+w[2] : w[2]
+  ];
+  show(selected);
+}
+
+function clearAll(){
+  selected=null;
+  document.getElementById("koResult").textContent="문장을 선택하세요";
+  document.getElementById("jpResult").textContent="日本語がここに出ます";
+  document.getElementById("pronResult").textContent="발음이 여기에 나옵니다";
+}
+
+function speakCurrent(){
+  if(selected) speakText(selected[1]);
+}
+
+function speakText(text){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="ja-JP";
+  u.rate=0.82;
+  u.pitch=1;
+  const voices=speechSynthesis.getVoices();
+  const v=voices.find(x=>x.lang==="ja-JP"||x.lang.startsWith("ja"));
+  if(v) u.voice=v;
+  speechSynthesis.speak(u);
+}
+speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+
+renderDays();
+renderSchedule();
+renderMenu();
+renderPhrases();
+</script>
+
+</body>
+</html>
